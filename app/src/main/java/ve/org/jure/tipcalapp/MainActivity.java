@@ -14,19 +14,22 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.Date;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import ve.org.jure.tipcalapp.fragments.TipHistoryListFragment;
+import ve.org.jure.tipcalapp.fragments.TipHistoryListFragmentListener;
+import ve.org.jure.tipcalapp.models.TipRecord;
 
 public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.inputBill) EditText inputBill;
-    @BindView(R.id.btnSubmit) Button btnSubmit;
     @BindView(R.id.inputPercentage) EditText inputPercentage;
-    @BindView(R.id.btnIncrease) Button btnIncrease;
-    @BindView(R.id.btnDecrease) Button btnDecrease;
-    @BindView(R.id.btnClear) Button btnClear;
     @BindView(R.id.txtTip) TextView txtTip;
+
+    TipHistoryListFragmentListener fragmentListener;
 
     private final static int TIP_STEP_CHANGE = 1;
     private final static int DEFAULT_TIP_PERCENTAGE = 10;
@@ -37,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        TipHistoryListFragment fragment = (TipHistoryListFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentList);
+        fragment.setRetainInstance(true);
+
+        fragmentListener = (TipHistoryListFragmentListener) fragment;
     }
 
     @Override
@@ -52,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.action_about) {
             about();
-
             return true;
         }
 
@@ -61,14 +67,21 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.btnSubmit)
     public void handleClickSubmit() {
-        hideKeboard();
+        hideKeyboard();
         String stringInputTotal = inputBill.getText().toString().trim();
         if (!stringInputTotal.isEmpty()) {
             double total = Double.parseDouble(stringInputTotal);
             int tipPercentage = getTipPercentage();
-            double tip = total * (tipPercentage / 100d);
 
-            String strTip = String.format(getString(R.string.global_messsge_tip), tip);
+            TipRecord tipRecord = new TipRecord();
+            tipRecord.setBill(total);
+            tipRecord.setTipPercentage(tipPercentage);
+            tipRecord.setTimestamp(new Date());
+
+            String strTip = String.format(getString(R.string.global_messsge_tip), tipRecord.getTip());
+
+            fragmentListener.addTolist(tipRecord);
+
             txtTip.setVisibility(View.VISIBLE);
             txtTip.setText(strTip);
         }
@@ -86,15 +99,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @OnClick(R.id.btnIncrease)
-    public void handleClickIncrease(){
-        hideKeboard();
+    public void handleClickIncrease() {
+        hideKeyboard();
         handleTipChange(TIP_STEP_CHANGE);
     }
 
     @OnClick(R.id.btnDecrease)
-    public void handleClickDecrease(){
-        hideKeboard();
+    public void handleClickDecrease() {
+        hideKeyboard();
         handleTipChange(-TIP_STEP_CHANGE);
+    }
+
+    @OnClick(R.id.btnClear)
+    public void handleClickClear() {
+        fragmentListener.clearList();
     }
 
     private void handleTipChange(int change) {
@@ -106,8 +124,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void hideKeboard() {
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         try {
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), imm.HIDE_NOT_ALWAYS);
         } catch (NullPointerException npe) {

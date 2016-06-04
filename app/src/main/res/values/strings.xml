@@ -10,5 +10,8 @@
     <string name="main.notice.clear">Elementos recientes ha quedado vacio</string>
     <string name="main.menu.action.about">Acerca de</string>
 
+    <string name="tipdetail.messsge.bill">Total: %,.1f</string>
+
     <string name="global.messsge.tip">Propina %,.1f</string>
+
 </resources>
